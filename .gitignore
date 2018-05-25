@@ -1,4 +1,5 @@
 .idea/
+coverage
 node_modules
 update.tar.gz
 yarn.error
