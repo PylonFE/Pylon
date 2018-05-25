@@ -1,0 +1,6 @@
+package.json
+package-lock.json
+src/server/thrift/dist
+src/server/thrift/src
+src/server/service/thrift
+*.d.ts

@@ -1,0 +1,912 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <style>
+        .node rect {
+            cursor: pointer;
+            fill: #fff;
+            fill-opacity: 0.5;
+            stroke: #3182bd;
+            stroke-width: 1.5px;
+        }
+
+        .node text {
+            font: 10px sans-serif;
+            pointer-events: none;
+        }
+
+        path.denpen {
+            fill: none;
+        }
+
+        path.circles {
+            fill: none;
+        }
+
+        .link {
+            fill: none;
+            stroke: #9ecae1;
+            stroke-width: 1.5px;
+        }
+
+        .tooltipRect {
+            font-family: simsun;
+            font-size: 16px;
+            height: auto;
+            padding: 10px;
+            max-width: 400px;
+            position: absolute;
+            text-align: left;
+            border-style: solid;
+            text-overflow: ellipsis;
+            opacity: 0;
+            overflow: hidden;
+            border-width: 1px;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+        .line {
+            height: 2px;
+            width: 80px;
+            margin: 10px 10px 0 0;
+
+        }
+
+        .red {
+            color: #f00;
+        }
+
+        .red-lengend {
+            color: #f00;
+            background: #f00;
+        }
+
+        .yellow {
+            color: yellow;
+            background: yellow;
+        }
+
+        .blue {
+            color: blue;
+            background: blue;
+        }
+
+        .green {
+            background: rgb(100, 210, 100);
+        }
+
+        .rect {
+            width: 40px;
+            height: 30px;
+            opacity: 0.5;
+        }
+
+        .tooltipLine {
+            font-family: simsun;
+            font-size: 16px;
+            padding: 10px;
+            height: auto;
+            position: absolute;
+            text-align: left;
+            opacity: 0;
+            border-style: solid;
+            border-width: 1px;
+            background-color: white;
+            border-radius: 5px;
+        }
+
+        .nodenpen {
+            background: rgb(198, 219, 239);
+        }
+
+        .code {
+            max-height: 600;
+            max-width: 800;
+            overflow: scroll;
+            position: absolute;
+            top: 50px;
+            opacity: 0;
+            left: 50px;
+        }
+
+        .CodeMirror {
+            position: fixed !important;
+            top: 50px;
+            height: 600px !important;
+            left: 50px;
+            max-width: 680px !important;
+        }
+
+        .legend {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 20px;
+            border-radius: 10px;
+            border: #000 solid 1px;
+        }
+
+        .legend>div {
+            display: flex;
+            margin-top: 10px;
+            justify-content: space-between;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/codemirror/5.37.0/codemirror.min.css">
+</head>
+
+<body marginwidth="0" marginheight="0">
+    <svg>
+        <defs>
+            <marker id="arrow_red" markerUnits="strokeWidth" markerWidth="12" markerHeight="12" viewBox="0 0 12 12" refX="6" refY="6"
+                orient="auto">
+                <path d="M2,2 L10,6 L2,10 L6,6 L2,2" style="fill: #f00;"></path>
+            </marker>
+            <marker id="arrow_blue" markerUnits="strokeWidth" markerWidth="12" markerHeight="12" viewBox="0 0 12 12" refX="6" refY="6"
+                orient="auto">
+                <path d="M2,2 L10,6 L2,10 L6,6 L2,2" style="fill: #0000ff;"></path>
+            </marker>
+            <marker id="arrow_gray" markerUnits="strokeWidth" markerWidth="12" markerHeight="12" viewBox="0 0 12 12" refX="6" refY="6"
+                orient="auto">
+                <path d="M2,2 L10,6 L2,10 L6,6 L2,2" style="fill: #777;"></path>
+            </marker>
+            <marker id="arrow_yellow" markerUnits="strokeWidth" markerWidth="12" markerHeight="12" viewBox="0 0 12 12" refX="6" refY="6"
+                orient="auto">
+                <path d="M2,2 L10,6 L2,10 L6,6 L2,2" style="fill: #ffff00;"></path>
+            </marker>
+            <div class='legend' id='legend'>
+                <div>点击方块获得依赖关系：</div>
+                <div>
+                    <div class='line blue'></div>
+                    <div>依赖</div>
+                </div>
+                <div>
+                    <div class='line red-lengend'></div>
+                    <div>符合规则的依赖</div>
+                </div>
+                <div>
+                    <div class='line yellow'></div>
+                    <div>循环依赖</div>
+                </div>
+                <div>
+                    <div class='rect nodenpen'></div>
+                    <div>没有本地依赖</div>
+                </div>
+                <div>
+                    <div class='rect green'></div>
+                    <div>有本地依赖</div>
+                </div>
+                <div>
+                    <div class='rect red-lengend'></div>
+                    <div>有命中下方规则的本地依赖</div>
+                </div>
+
+            </div>
+        </defs>
+    </svg>
+    <textarea id='code' class="code"></textarea>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://cdn.bootcss.com/lodash.js/4.17.5/lodash.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/codemirror/5.37.0/codemirror.js"></script>
+    <script src="https://cdn.bootcss.com/codemirror/5.37.0/mode/javascript/javascript.min.js"></script>
+    <script>
+        var margin = {
+                top: 30,
+                right: 20,
+                bottom: 30,
+                left: 20
+            },
+            width = window.innerWidth || 960,
+            barHeight = 20,
+            barWidth = (width - margin.left - margin.right) * 0.5;
+
+        var duration = 400;
+
+
+        var diagonal = d3.linkHorizontal()
+            .x(function (d) {
+                return d.y;
+            })
+            .y(function (d) {
+                return d.x;
+            });
+
+        var svg = d3.select("svg")
+            .attr("width", width)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        let isClicked = false;
+        let pathPrefix = `<%- pathPrefix %>`;
+        const GlineNumerIgnorePath = `<%- lineNumerIgnorePath %>` || '';
+        let ruleTreeStr = `<%- treeWithRule %>` || '';
+        let GruleTree;
+        try {
+            GruleTree = JSON.parse(ruleTreeStr);
+        } catch (e) {
+            GruleTree = {}
+        }
+        let rulesCommondLineStr = `<%- rules %>`;
+        const GRulesCommondLine = JSON.parse(rulesCommondLineStr);
+        let circlesStr = `<%- circles %>`;
+        const GCirclesArray = JSON.parse(circlesStr);
+        let GTreeStr = `<%- denpencyData %>`;
+        let GTree = JSON.parse(GTreeStr);
+        var fileArch = `<%- fileArch %>`;
+        fileArch = JSON.parse(fileArch);
+        const fileMaxLineStr = `<%- fileMaxLine %>`;
+        let GfileMaxLine = +fileMaxLineStr;
+        fileArchRoot = d3.hierarchy(fileArch);
+        fileArchRoot.x0 = 0;
+        fileArchRoot.y0 = 0;
+
+        let fileArchNodes = fileArchRoot.descendants();
+        let projectTotalLineNumber = 0;
+        const GlineNumerIgnorePathRegExp = new RegExp(GlineNumerIgnorePath);
+        fileArchNodes.forEach(node => {
+            if (node.data && node.data.totalLineNumber) {
+                // 对不忽略的路径求和
+                if (GlineNumerIgnorePath === '' || !node.data.name.match(GlineNumerIgnorePathRegExp)) {
+                    projectTotalLineNumber += node.data.totalLineNumber;
+                }
+            }
+            // node.data && node.data.size && console.log(node.data && node.data.size)
+            node.isHadRelative = isHadRelative(node, GTree, fileArchNodes);
+            node.isMatchRule = isNodeMatchRuleTreeSource(node, GruleTree);
+            // 为激活态 为点击非激活态做准备
+            node.isActive = true
+        });
+
+        d3.select('#legend').append(
+            'div'
+        ).text(`标红规则：${JSON.stringify(GRulesCommondLine)}`);
+
+        d3.select('#legend').append(
+            'div'
+        ).text(`项目总行数：${projectTotalLineNumber}   忽略文件正则：/${GlineNumerIgnorePath}/`);
+
+        function getCircleLinks(circles /* string[][] */ ) {
+            const circlesLinks = [];
+            for (let index = 0; index < circles.length; index++) {
+                const circleItem = circles[index];
+                for (let indexc = 0; indexc < circleItem.length - 1; indexc++) {
+                    // const path = circleItem[index];
+                    circlesLinks.push({
+                        source: {
+                            name: circleItem[indexc],
+                            index: indexc
+                        },
+                        target: {
+                            name: circleItem[indexc + 1],
+                            index: indexc + 1
+                        }
+                    })
+                }
+            }
+            return circlesLinks;
+        }
+
+        const depenOriginlinks = switchTreeNodeToLinks(GTree);
+        const circlesLinks = getCircleLinks(GCirclesArray);
+        const circlesLinksWithData = [];
+        circlesLinks.forEach((link, index) => {
+            const source = link.source;
+            const target = link.target;
+
+            const a = ifExisNode(source, fileArchNodes);
+            const b = ifExisNode(target, fileArchNodes);
+            // const isRuleLink = isLinkMatchRules(link, GruleTree);
+            if (a && b) {
+
+                // 转换为带坐标的link
+                circlesLinksWithData.push({
+                    source: a,
+                    target: b,
+                    isActive: true,
+                    lineIndex: source.index
+                })
+            }
+        });
+        const linkdatas = [];
+        depenOriginlinks.forEach((link, index) => {
+
+            const source = link.source;
+            const target = link.target;
+
+            const a = ifExisNode(source, fileArchNodes);
+            const b = ifExisNode(target, fileArchNodes);
+            const isRuleLink = isLinkMatchRules(link, GruleTree);
+            if (a && b) {
+                // 转换为带坐标的link
+                linkdatas.push({
+                    source: a,
+                    target: b,
+                    isActive: true,
+                    isRuleLink
+                })
+            }
+        });
+        updateFileArch(fileArchRoot);
+
+
+        function isNodeMatchRuleTreeSource(node, treeRules) {
+            const treeKeys = Object.keys(treeRules)
+            for (let index = 0; index < treeKeys.length; index++) {
+                const keyFileName = treeKeys[index];
+                if (node.data.name === keyFileName &&
+                    treeRules[keyFileName].denpendencesFileName && treeRules[keyFileName].denpendencesFileName.length
+                ) {
+                    return true;
+                }
+            }
+        }
+
+        function isLinkMatchRules(link, treeRules) {
+            // treeRules是树装结构
+            const treeKeys = Object.keys(treeRules)
+            for (let index = 0; index < treeKeys.length; index++) {
+                const treeRuleSourcePath = treeKeys[index];
+                const targetDenepndencyPaths = treeRules[treeRuleSourcePath].denpendencesFileName
+                for (const targetDenepndencyPath of targetDenepndencyPaths) {
+                    if (link.source.name === treeRuleSourcePath && link.target.name === targetDenepndencyPath) {
+                        return true
+                    }
+                }
+            }
+        }
+
+
+        /**
+         *  函数
+         * **/
+        // 把 树状 denpendencesFileName结构转化为link结构
+        function switchTreeNodeToLinks(json) {
+            let ans = [];
+            let array = Object.keys(json);
+            for (let index = 0; index < array.length; index++) {
+                const element = array[index];
+                json[element].denpendencesFileName.forEach(ele => {
+                    ans.push({
+                        source: {
+                            name: element
+                        },
+                        target: {
+                            name: ele
+                        }
+                    })
+                })
+            }
+            return ans;
+        }
+
+        function ifExisNode(nodeinnternal, nodes) {
+            for (let index = 0; nodes && index < nodes.length; index++) {
+                const node = nodes[index];
+                if (node.data.name === nodeinnternal.name) {
+                    return node
+                }
+            }
+        }
+        //添加提示框的div  
+        var tooltipLine = d3.select("body").append("div")
+            .attr("class", "tooltipLine") //用于css设置类样式  
+            .attr("opacity", 0.0);
+
+        //添加提示框的div  
+        var tooltipRect = d3.select("body").append("div")
+            .attr("class", "tooltipRect") //用于css设置类样式  
+            .attr("opacity", 0.0);
+
+        function drawCirclesLine(links) {
+            lines = svg.selectAll('path.circles').data(links);
+            lines.enter().append("path")
+                .attr("marker-end", (d) => {
+
+                    if (d.isActive && d.isRuleLink) {
+                        return 'url(#arrow_yellow)'
+                    }
+                    return d.isActive ? 'url(#arrow_yellow)' : 'url(#arrow_yellow)'
+
+                })
+                .attr('class', 'circles')
+                .attr('class', (d) => d.isActive && isClicked ? 'active circles' : 'circles')
+                .attr("stroke-width", (d) => d.isActive && isClicked ? 3 : 2)
+                .attr('stroke', (d) => {
+                    return 'yellow'
+                    if (d.isActive && d.isRuleLink) {
+                        return 'red'
+                    }
+                    return d.isActive ? '#0000ff' : '#777'
+                })
+                .attr('d', function (d) {
+                    // lineIndex
+                    var path = d3.path();
+                    path.moveTo(d.source.y + barWidth / 3, d.source.x);
+                    // http://www.w3school.com.cn/tags/canvas_quadraticcurveto.asp
+                    path.quadraticCurveTo((d.source.y + barWidth / 3 + 350) * d.lineIndex, (d.source.x + (d.target.x -
+                                d.source.x) /
+                            2),
+                        d.target.y + barWidth / 3, d.target.x, 50);
+                    return path.toString();
+                }).on("mouseover", function (d,
+                    i) {
+                    //设置tooltip文字  
+                    tooltipLine.html(
+                            
+
+                            `
+
+                            denpendency path: \r\n
+                            
+                            ${d.source.data.name.replace(pathPrefix,'')}
+                        
+                                ------------->
+
+                            ${d.target.data.name.replace(pathPrefix,'')}
+                            `
+                        )
+                        //设置tooltipLine的位置(left,top 相对于页面的距离)   
+                        .style("left", (d3.event.pageX) + "px")
+                        .style("top", (d3.event.pageY + 20) + "px")
+                        .style("opacity", 1.0);
+
+                }).on("mouseout", function (d) {
+                    tooltipLine.style("opacity", 0.0);
+                });
+
+
+            lines.exit().remove();
+        }
+
+        function drawDenpendencyLine(links) {
+            lines = svg.selectAll('path.denpen').data(links);
+            // 连线更新
+            lines
+                .attr('d', function (d) {
+                    if (d.isActive && isClicked) {
+                        var path = d3.path();
+                        path.moveTo(d.source.y + barWidth, d.source.x);
+                        path.quadraticCurveTo(d.source.y + barWidth + 350, d.source.x + (d.target.x - d.source.x) /
+                            2,
+                            d.target.y + barWidth, d.target
+                            .x, 50);
+                        return path.toString();
+                    }
+                })
+                .attr("stroke-width", (d) => d.isActive && isClicked ? 3 : 1)
+                .attr('class', (d) => d.isActive && isClicked ? 'active denpen' : 'denpen')
+                .attr('stroke', (d) => {
+                    if (d.isActive && d.isRuleLink) {
+                        return 'red'
+                    }
+                    return d.isActive ? '#0000ff' : '#777'
+                }).attr("marker-end", (d) => {
+                    if (d.isActive && d.isRuleLink) {
+                        return 'url(#arrow_red)'
+                    }
+                    return d.isActive ? 'url(#arrow_blue)' : 'url(#arrow_gray)'
+                }).on("mouseover", function (d,
+                    i) {
+                    if (isClicked && d.isActive) {
+                        console.log(d, i);
+                        //设置tooltip文字  
+                        tooltipLine.html(
+                                `
+                                dependency path:
+
+                                ${d.source.data.name.replace(pathPrefix,'')}
+                        
+                                ------------->
+
+
+                            ${d.target.data.name.replace(pathPrefix,'')}
+                            `
+                            )
+                            //设置tooltipLine的位置(left,top 相对于页面的距离)   
+                            .style("left", (d3.event.pageX) + "px")
+                            .style("top", (d3.event.pageY + 20) + "px")
+                            .style("opacity", 1.0);
+                    }
+                }).on("mouseout", function (d) {
+                    tooltipLine.style("opacity", 0.0);
+                });
+            // 连线初始挂载
+            lines.enter().append("path")
+                .attr("marker-end", (d) => {
+
+                    if (d.isActive && d.isRuleLink) {
+                        return 'url(#arrow_red)'
+                    }
+                    return d.isActive ? 'url(#arrow_blue)' : 'url(#arrow_gray)'
+
+                })
+                .attr('class', 'denpen')
+                .attr('class', (d) => d.isActive && isClicked ? 'active denpen' : 'denpen')
+                .attr("stroke-width", (d) => d.isActive && isClicked ? 3 : 1)
+                .attr('stroke', (d) => {
+                    if (d.isActive && d.isRuleLink) {
+                        return 'red'
+                    }
+                    return d.isActive ? '#0000ff' : '#777'
+                })
+            // 初始不画线
+            // .attr('d', function (d) {
+            //     var path = d3.path();
+            //     path.moveTo(d.source.y + barWidth, d.source.x);
+            //     path.quadraticCurveTo(d.source.y + barWidth + 350, d.source.x + (d.target.x - d.source.x) / 2,
+            //         d.target.y + barWidth, d.target
+            //         .x, 50);
+            //     return path.toString();
+            // }).on("mouseover", function (d, i) {
+            //     if (isClicked && d.isActive) {
+            //         console.log(d, i)
+            //     }
+            // })
+
+
+            lines.exit().remove();
+            // svg 没有z-index ，重新append 得到覆盖效果
+            var g = document.querySelectorAll('svg>g')[0];
+            let nodesClone = []
+            const nodes = g.querySelectorAll('path.active') || [];
+            nodes.forEach(node => {
+                g.appendChild(node)
+            });
+
+        }
+        /**
+         *
+         * end drawDenpendencyLine
+         */
+
+
+        function isHadRelative(node, tree, nodes) {
+            let flag = tree[node.data.name] && tree[node.data.name].denpendencesFileName && tree[node.data.name].denpendencesFileName
+                .length;
+            let flag2 = false;
+            for (let index = 0; flag && index < nodes.length; index++) {
+                const element = nodes[index];
+                const isfind = _.find(tree[node.data.name].denpendencesFileName, (filename) => {
+                    return filename === element.data.name
+                })
+                flag2 = flag2 || isfind
+            }
+            return flag2 && flag
+
+        }
+
+
+        function Rectcolor(d) {
+
+            if (!d.isActive) {
+                return '#777'
+            } else if (d.isMatchRule) {
+                return '#ff0000'
+            } else if (d.isHadRelative) {
+                return '#64d264'
+            } else {
+                return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#c6dbef";
+            }
+        }
+
+
+
+        function updateFileArch(source) {
+            var height = Math.max(500, fileArchNodes.length * barHeight + margin.top + margin.bottom);
+            d3.select("svg").transition()
+                .duration(duration)
+                .attr("height", height);
+            d3.select(self.frameElement).transition()
+                .duration(duration)
+                .style("height", height + "px");
+
+            // Compute the "layout". TODO https://github.com/d3/d3-hierarchy/issues/67
+            var index = -1;
+            fileArchRoot.eachBefore(function (n) {
+                n.x = ++index * barHeight;
+                n.y = n.depth * 20;
+            });
+
+            var i = 0;
+            var nodeWithchFileArchD3Data = svg.selectAll(".node")
+                .data(fileArchNodes, function (d) {
+                    return d.id || (d.id = ++i);
+                });
+
+            var nodeEnterWithGInFileArch = nodeWithchFileArchD3Data.enter().append("g")
+                .attr("class", "node")
+                .attr("transform", function (d) {
+                    return "translate(" + source.y0 + "," + source.x0 + ")";
+                })
+                .style("opacity", 0);
+
+            // Enter any new nodes at the parent's previous position.
+            nodeEnterWithGInFileArch.append("rect")
+                .attr("y", -barHeight / 2)
+                .attr("height", barHeight)
+                .attr("width", barWidth)
+                .style("fill", Rectcolor)
+                .on("click", RectClick)
+                // 双击
+                .on("dblclick", Rectdblclick)
+                .on('mouseover', (d) => {
+                    const denpendencesFileNames = GTree[d.data.name] && GTree[d.data.name].denpendencesFileName;
+                    const toolTipShowed = [];
+                    for (let index = 0; denpendencesFileNames && index < denpendencesFileNames.length; index++) {
+                        const denpendencesFileName = denpendencesFileNames[index];
+                        if (ifExisNode({
+                                name: denpendencesFileName
+                            }, fileArchNodes)) {
+                            let redCls;
+                            if (d.isMatchRule) {
+                                for (const ruleDenpenFileName of GruleTree[d.data.name].denpendencesFileName) {
+                                    redCls = ruleDenpenFileName === denpendencesFileName;
+                                    if (redCls) {
+                                        break;
+                                    }
+                                }
+                            }
+
+                            toolTipShowed.push(
+                                `<span class=${redCls ? 'red' : ''}                           
+                                >${denpendencesFileName.replace(pathPrefix,'')}</span>`
+                            )
+                        }
+                    }
+                    if (toolTipShowed && toolTipShowed.length) {
+                        tooltipRect.html(
+                                `  
+                                <div>依赖: \r\n</div>
+                                ${toolTipShowed.join('\r\n')}
+                            `
+                            )
+                            //设置tooltipLine的位置(left,top 相对于页面的距离)   
+                            .style("left", (d3.event.pageX) + "px")
+                            .style("top", (d3.event.pageY + 20) + "px")
+                            .style("opacity", 1.0);
+                    }
+                })
+                .on('mouseout', (d) => {
+                    tooltipRect.style('opacity', 0)
+                });
+
+
+            nodeEnterWithGInFileArch.append("text")
+                .attr("dy", 3.5)
+                .attr("dx", barWidth - 70)
+                .text(function (d) {
+                    if (d.data && d.data.size) {
+                        return `${d.data.totalLineNumber}行            ${d.data.size || ''}`
+                    }
+                    return ''
+                });
+            nodeEnterWithGInFileArch.append("text")
+                .attr("dy", 3.5)
+                .attr("dx", 5.5)
+                .text(function (d) {
+                    if (!d.parent) {
+                        let path = d.data.name.replace(pathPrefix, '');
+                        // todo 300
+                        if (GfileMaxLine && d.data.totalLineNumber > GfileMaxLine) {
+                            path += `      注意：超过文件行数限定： ${GfileMaxLine}`
+                        }
+                        return path;
+                    } else {
+                        let path = d.data.name.replace(d.parent.data.name, '');
+                        if (GfileMaxLine && d.data.totalLineNumber > GfileMaxLine) {
+                            path += `      注意：超过文件行数限定： ${GfileMaxLine}`
+                        }
+                        return path;
+                    }
+                });
+
+
+            nodeEnterWithGInFileArch.transition()
+                .duration(duration)
+                .attr("transform", function (d) {
+                    return "translate(" + d.y + "," + d.x + ")";
+                })
+                .style("opacity", 1);
+
+            nodeWithchFileArchD3Data.transition()
+                .duration(duration)
+                .attr("transform", function (d) {
+                    return "translate(" + d.y + "," + d.x + ")";
+                })
+                .style("opacity", 1)
+                .select("rect")
+                .style("fill", Rectcolor);
+
+            nodeWithchFileArchD3Data.exit().transition()
+                .duration(duration)
+                .attr("transform", function (d) {
+                    return "translate(" + source.y + "," + source.x + ")";
+                })
+                .style("opacity", 0)
+                .remove();
+
+
+            var fileArchLinksData = svg.selectAll(".link")
+                .data(fileArchRoot.links(), function (d) {
+                    return d.target.id;
+                });
+
+            fileArchLinksData.enter().insert("path", "g")
+                .attr("class", "link")
+                .attr("d", function (d) {
+                    var o = {
+                        x: source.x0,
+                        y: source.y0
+                    };
+                    return diagonal({
+                        source: o,
+                        target: o
+                    });
+                })
+                .transition()
+                .duration(duration)
+                .attr("d", diagonal);
+
+
+            fileArchLinksData.transition()
+                .duration(duration)
+                .attr("d", diagonal);
+
+
+            fileArchLinksData.exit().transition()
+                .duration(duration)
+                .attr("d", function (d) {
+                    var o = {
+                        x: source.x,
+                        y: source.y
+                    };
+                    return diagonal({
+                        source: o,
+                        target: o
+                    });
+                })
+                .remove();
+            fileArchRoot.each(function (d) {
+                d.x0 = d.x;
+                d.y0 = d.y;
+            });
+            drawDenpendencyLine(linkdatas);
+            drawCirclesLine(circlesLinksWithData);
+            let isCodeMirrorEditorShow = false;
+
+            function Rectdblclick(d) {
+                // debugger
+                const filePath = d.data.name;
+                const event = d3.event;
+                $.get(`/getFileContent?filePath=${encodeURIComponent(filePath)}`).then((res) => {
+
+                    if (!isCodeMirrorEditorShow) {
+                        if(document.getElementsByClassName('CodeMirror') && document.getElementsByClassName('CodeMirror')[0]){
+                            document.getElementsByClassName('CodeMirror')[0].remove();
+                        }
+                        d3.select('.code').text(res.content);
+                        var codeTextarea = document.getElementById('code');
+                        var CodeMirrorEditor = CodeMirror.fromTextArea(codeTextarea, {
+                            mode: "text/javascript",
+                            lineNumbers: true
+                        });            
+                        document.body.style.position='fixed'            
+                        // d3.select('.CodeMirror').style("left", (event.pageX) + "px")
+                        // .style("top", (event.pageY + 20) + "px");
+                        d3.select(".code").transition()
+                            .duration(duration)
+                            .style('opacity', 1);
+                        isCodeMirrorEditorShow = true;
+                    }
+                })
+            }
+            function findELeByParentClassName(ele,cls){
+                while (ele.parentElement) {
+                    
+                }
+
+            }
+            function isPathInclude(paths,cls){
+                for (let index = 0; index < paths.length; index++) {
+                    const pathEle = paths[index];
+                    if((pathEle.classList && pathEle.classList[0])===cls.trim()){
+                        return true
+                    }
+                }
+                return false
+            }
+            document.body.addEventListener('click', (e) => {
+                console.log(e);
+                // e.path
+                const isCodeMirrorClicked =  isPathInclude(e.path,'CodeMirror');
+               // if(e.target.className)
+                // todo targe 元素 只要是codem的子元素
+                // const shouldNotRemove = typeof e.target.className === 'string' && e.target.className.trim() ===
+                //     'CodeMirror-line';
+                if (isCodeMirrorEditorShow && !isCodeMirrorClicked) {
+                    isCodeMirrorEditorShow = false
+                    document.body.style.position='relative'
+                    document.getElementsByClassName('CodeMirror')[0].remove();
+                }
+            });
+
+            function RectClick(d) {
+                // 把点击的rect方块 关联的nodes和links找出来              
+                console.log(d)
+                const relativeNodes = findRelativeNodesAndLinks(d)
+                const relativeLinks = findRelatievLinks(d, linkdatas)
+                if (!isClicked) {
+                    isClicked = true
+                    /**
+                     * 清空状态
+                     */
+                    fileArchNodes.forEach(node => {
+                        node.isActive = false;
+                    })
+                    linkdatas.forEach(link => {
+                        link.isActive = false
+                    })
+                    /**
+                     * 清空状态
+                     */
+
+
+                    // 关联态设置为active
+                    relativeNodes.forEach(node => {
+                        node.isActive = true;
+                    })
+
+                    relativeLinks.forEach(link => {
+                        link.isActive = true
+                    })
+                } else {
+                    /**
+                     * 清空状态
+                     */
+                    isClicked = false
+                    fileArchNodes.forEach(node => {
+                        node.isActive = true;
+                    });
+                    linkdatas.forEach(link => {
+                        link.isActive = true
+                    });
+                }
+                updateFileArch(d);
+            }
+
+            function findRelatievLinks(d, linkdatas) {
+                const links = []
+                linkdatas.forEach(link => {
+                    if (link.source.data.name === d.data.name) {
+                        links.push(link);
+                    }
+                });
+                return links;
+            }
+
+            // d是node转换后的数据属性
+            function findRelativeNodesAndLinks(d) {
+                const relativeNodes = [];
+                if (GTree[d.data.name]) {
+                    relativeNodes.push(d);
+                    const denpendencesFileName = GTree[d.data.name].denpendencesFileName
+                    if (denpendencesFileName && denpendencesFileName.length) {
+                        denpendencesFileName.forEach(eleFileName => {
+                            const finded = _.find(fileArchNodes, (node) => {
+                                return node.data.name === eleFileName
+                            })
+                            finded && relativeNodes.push(finded);
+                        })
+                    }
+                    return relativeNodes
+                }
+                return relativeNodes
+            }
+        }
+    </script>
+
+</body>
+
+</html>
