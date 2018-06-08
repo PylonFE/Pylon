@@ -25,7 +25,7 @@ export interface treeItem {
 }
 interface fileOption {
   filePath: string;
-  tsconfigPath: string;
+  tsconfigPath?: string;
 }
 
 interface TsConfigFactoryOptions {
@@ -41,10 +41,14 @@ function tsConfigFileResolver(
     rootTsConfigPath: '.',
     ignorePaths: [/node_modules/],
   }
-): string | undefined {
+): string {
   // 如果是路径带有tsconfig.json，不找了直接返回
   if (options.rootTsConfigPath.indexOf('tsconfig.json') > -1) {
-    console.log(chalk.blue('------------find tsconfig ' + path.resolve(options.rootTsConfigPath)))
+    console.log(
+      chalk.blue(
+        '------------find tsconfig ' + path.resolve(options.rootTsConfigPath)
+      )
+    );
     return path.resolve(options.rootTsConfigPath);
   }
   if (!options.ignorePaths) {
@@ -60,7 +64,7 @@ function tsConfigFileResolver(
   function lazyDictionary(filePath: string) {
     let isIgnore;
     if (options.ignorePaths) {
-      isIgnore = options.ignorePaths.some(reg => {
+      isIgnore = options.ignorePaths.some((reg) => {
         return reg.test(filePath);
       });
     }
@@ -71,7 +75,11 @@ function tsConfigFileResolver(
       });
       if (path) {
         return path;
+      } else {
+        return '';
       }
+    } else {
+      return '';
     }
   }
   const lazyDictionaries = [];
@@ -83,7 +91,7 @@ function tsConfigFileResolver(
     if (stat.isFile()) {
       if (fileName.indexOf('tsconfig.json') > -1) {
         // tsconfig.json 文件
-        console.log(chalk.blue('------------find tsconfig ' + filePath))
+        console.log(chalk.blue('------------find tsconfig ' + filePath));
         l('------------find tsconfig', filePath);
         return filePath;
       }
@@ -96,12 +104,18 @@ function tsConfigFileResolver(
     const path = lazyDictionary(lazyDictionaries[i]);
     if (path) {
       return path;
-    }
+    }  
   }
+  return ''
 }
-function isValidatePath(str) {
-  return str;
+function isValidatePath(str: string): boolean {
+  return !!str;
 }
+
+interface ICirleSaved {
+  [key: string]: { count: number };
+}
+
 /**
  *
  * @param path 要分析的引用开始路径
@@ -112,8 +126,8 @@ function isValidatePath(str) {
 function analyzeAPathExistCirleRefenrence(
   path: string,
   tree: Tree,
-  saved = {},
-  ans = [],
+  saved: ICirleSaved = {},
+  ans: string[] = [],
   level: number
 ) {
   const denpendences = tree[path] && tree[path].denpendencesFileName;
@@ -141,7 +155,7 @@ function analyzeAPathExistCirleRefenrence(
         ans,
         level + 1
       );
-      if (anaRes) {      
+      if (anaRes) {
         return true;
       }
       ans.pop();
@@ -169,8 +183,8 @@ function analyzeAPathExistCirleRefenrence(
  *   filePath: 文件绝对路径;
   tsconfigPath: tsconfig.json 可能路径 会自动搜索;
  */
-let tsconfigPath;
-async function analyzeFile(options: fileOption) {
+let tsconfigPath: string;
+async function analyzeFile(options: fileOption): Promise<Tree> {
   const filePath = options.filePath;
   if (!path.isAbsolute(filePath)) {
     throw new Error(`${filePath}不是绝对路径`);
@@ -261,10 +275,10 @@ export async function analyze(options: Option): Promise<Tree> {
       const filePath = path.resolve(options.dictionaryPath, fileName);
       //l('------------analyze filePath', filePath);
       const stat = fs.statSync(filePath);
-      const isIgnore = options.ignore.some(em => {
+      const isIgnore = options.ignore.some((em) => {
         return em.test(filePath);
       });
-      const isMatch = options.match.some(em => {
+      const isMatch = options.match.some((em) => {
         return em.test(filePath);
       });
       if (stat.isFile() && !isIgnore && isMatch) {
@@ -304,8 +318,8 @@ function isTwoArrayIdentical(array_1: string[], array_2: string[]) {
 export function analyzeCirle(tree: Tree) {
   let allFilePaths = Object.keys(tree);
   const cirles = [] as string[][];
-  allFilePaths.forEach(path => {
-    let ans = [];
+  allFilePaths.forEach((path) => {
+    let ans: string[] = [];
 
     if (analyzeAPathExistCirleRefenrence(path, tree, {}, ans, 0)) {
       let shouldPush = true;

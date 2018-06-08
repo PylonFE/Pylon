@@ -1,15 +1,15 @@
 import * as path from 'path';
 import { analyze, Tree, Option, analyzeCirle } from '../analyzer';
-import * as pify from 'pify';
-const walk = require('walkdir');
-const exec = pify(require('child_process').exec);
+
 const opener = require('opener');
-const express = require('express');
-const http = require('http');
+// const express = require('express');
+import * as express from 'express';
+// const http = require('http');
+import * as http from 'http';
 import chalk from 'chalk';
 import * as fs from 'fs';
 import * as ejs from 'ejs';
-import * as koa from 'koa';
+
 import * as ts from 'typescript';
 import * as _ from 'lodash';
 import { getTreeDataWithDictionary } from '../util';
@@ -21,9 +21,12 @@ export interface Node {
   totalLineNumber?: string | number;
 }
 
-function findAllWithPredictInArray(arr, predict: (element: any) => boolean) {
+function findAllWithPredictInArray<T>(
+  arr: T[],
+  predict: (element: any) => boolean
+) {
   if (!Array.isArray(arr)) {
-    return null;
+    return [];
   }
   const res = [];
   for (let index = 0; index < arr.length; index++) {
@@ -55,9 +58,9 @@ export function calcMatchedPaths(
     if (typeof targetRegExp === 'string') {
       targetRegExp = new RegExp(targetRegExp);
     }
-    const allMatchedSourceFile = findAllWithPredictInArray(
+    const allMatchedSourceFile = findAllWithPredictInArray<string>(
       allSourceFiles,
-      souceFileName => {
+      (souceFileName) => {
         return sourceRegExp.test(souceFileName);
       }
     );
@@ -67,7 +70,7 @@ export function calcMatchedPaths(
         tree[matchedSourceFile].denpendencesFileName;
       const targetMatchedFilesNamesWithMatchedSourceFiles = findAllWithPredictInArray(
         targetFilesNamesWithMatchedSourceFile,
-        targetFileName => {
+        (targetFileName) => {
           return targetRegExp.test(targetFileName);
         }
       );
@@ -115,17 +118,19 @@ export async function startAnalyze(option: userOpton) {
   if (option.statFile) {
     tree = JSON.parse(fs.readFileSync(option.statFile).toString());
   } else {
-    try{
-      tree = await analyze(Object.assign(option,{tsconfigPath:option.tsConfigPath}));
-    }catch(e){
-      console.error(e)
+    try {
+      tree = await analyze(
+        Object.assign(option, { tsconfigPath: option.tsConfigPath })
+      );
+    } catch (e) {
+      console.error(e);
     }
   }
 
-  try{
-  await getTreeDataWithDictionary(option.dictionaryPath, saved);
-  }catch(e){
-    console.error(e)
+  try {
+    await getTreeDataWithDictionary(option.dictionaryPath, saved);
+  } catch (e) {
+    console.error(e);
   }
   if (option.genStatFile) {
     fs.writeFileSync(option.genStatFile, JSON.stringify(tree));
@@ -133,10 +138,10 @@ export async function startAnalyze(option: userOpton) {
   let treeWithRule;
   if (option.rules) {
     // 不管tree是哪里得到的
-    try{
+    try {
       treeWithRule = calcMatchedPaths(tree, option.rules);
-    }catch(e){
-      console.error(e)
+    } catch (e) {
+      console.error(e);
     }
     console.log(
       chalk.bold(`分析关系 ${option.rules} `),
@@ -153,7 +158,6 @@ export async function startAnalyze(option: userOpton) {
   }
 
   startServer(
-    null,
     tree,
     saved.children[0],
     treeWithRule,
@@ -166,7 +170,6 @@ export async function startAnalyze(option: userOpton) {
 }
 
 function startServer(
-  opts,
   denpendencyData: Tree,
   fileArch: Node,
   treeWithRule?: Tree,
@@ -182,11 +185,10 @@ function startServer(
     openBrowser = true,
     bundleDir = null,
     defaultSizes = 'parsed',
-  } =
-    opts || {};
+  } = {};
   const projectRoot = path.resolve(__dirname, '../..');
 
-  const app = new express();
+  const app = express();
 
   app.engine('ejs', require('ejs').renderFile);
   app.set('view engine', 'ejs');
@@ -228,6 +230,9 @@ function startServer(
         return lineNumberIgnorePath || '';
       },
       get fileMaxLine() {
+        if (!fileMaxLine) {
+          return '';
+        }
         return +fileMaxLine || '';
       },
     });

@@ -6,7 +6,10 @@
     "module": "commonjs",
     "jsx": "react",
     "sourceMap": false,
-    "strict": false
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true
   },
   "include": ["./src"],
   "exclude": ["node_modules"]

@@ -37,7 +37,10 @@
   "bin": {
     "dependence": "./src/cli/index.js"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/express": "^4.16.0",
+    "tslint": "^5.10.0"
+  },
   "scripts": {
     "test": "jest",
     "build": "tsc -p tsconfig.json",

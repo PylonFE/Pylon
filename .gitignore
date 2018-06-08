@@ -10,3 +10,5 @@ src/**/*.js.map
 log
 *.log
 stat.json
+.setting
+.vscode

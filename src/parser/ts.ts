@@ -8,7 +8,7 @@ interface option {
   filePath: string;
 }
 
-export function getTsdenpenDences(options: option, res = []) {
+export function getTsdenpenDences(options: option, res:string[] = []) {
   const project = new Project({
     tsConfigFilePath: options.tsConfigFilePath,
   });
@@ -23,7 +23,7 @@ export function getTsdenpenDences(options: option, res = []) {
   return res;
 }
 export function walk(sourceFile: ts.SourceFile) {
-  const denpendences = [];
+  const denpendences:string[] = [];
   _walk(sourceFile);
 
   function _walk(node: ts.Node) {
@@ -39,7 +39,7 @@ export function walk(sourceFile: ts.SourceFile) {
   }
   return denpendences;
 }
-export function parse(fileName, tsConfigFilePath) {
+export function parse(fileName:string, tsConfigFilePath:string) {
   // Parse a file
   let sourceFile = ts.createSourceFile(
     fileName,
