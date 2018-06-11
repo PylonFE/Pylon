@@ -13,6 +13,17 @@ ts项目分析工具
 2. 行数标记
 5. 项目代码统计等
 
+使用方法：
+
+```js
+npm install Pylon
+or
+yarn add Pylon
+then
+dependence -p ./src -g stat.json --circle  -m 400
+```
+
+
  ```js
 -p, --path <file>
 用于指定要分析的项目路径，如果不传，默认为当前命令行运行路径
