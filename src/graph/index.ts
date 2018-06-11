@@ -1,16 +1,12 @@
 import * as path from 'path';
 import { analyze, Tree, Option, analyzeCirle } from '../analyzer';
 
-const opener = require('opener');
-// const express = require('express');
+import opener = require('opener');
 import * as express from 'express';
-// const http = require('http');
-import * as http from 'http';
+
 import chalk from 'chalk';
 import * as fs from 'fs';
-import * as ejs from 'ejs';
 
-import * as ts from 'typescript';
 import * as _ from 'lodash';
 import { getTreeDataWithDictionary } from '../util';
 
@@ -23,12 +19,13 @@ export interface Node {
 
 function findAllWithPredictInArray<T>(
   arr: T[],
-  predict: (element: any) => boolean
+  predict: (element: T) => boolean
 ) {
   if (!Array.isArray(arr)) {
     return [];
   }
-  const res = [];
+  const res: T[] = [];
+  // tslint:disable-next-line:prefer-for-of
   for (let index = 0; index < arr.length; index++) {
     const element = arr[index];
     if (predict(element)) {
@@ -42,12 +39,14 @@ function findAllWithPredictInArray<T>(
  * @param tree 保存所有指向的树
  * @param pathRegExpArray 二维数组，存储想要筛选出的路径指向
  */
+// tslint:disable-next-line:cognitive-complexity
 export function calcMatchedPaths(
   tree: Tree,
   pathRegExpArray: string[][] | RegExp[][]
 ): Tree {
   const treeWithRule: Tree = {};
-  let allSourceFiles = Object.keys(tree);
+  const allSourceFiles = Object.keys(tree);
+  // tslint:disable-next-line:prefer-for-of
   for (let index = 0; index < pathRegExpArray.length; index++) {
     const pathRegExp = pathRegExpArray[index];
     let sourceRegExp = pathRegExp[0] as RegExp;
@@ -64,8 +63,10 @@ export function calcMatchedPaths(
         return sourceRegExp.test(souceFileName);
       }
     );
-    for (let index = 0; index < allMatchedSourceFile.length; index++) {
-      const matchedSourceFile = allMatchedSourceFile[index];
+
+    // tslint:disable-next-line:prefer-for-of
+    for (let indexF = 0; indexF < allMatchedSourceFile.length; indexF++) {
+      const matchedSourceFile = allMatchedSourceFile[indexF];
       const targetFilesNamesWithMatchedSourceFile =
         tree[matchedSourceFile].denpendencesFileName;
       const targetMatchedFilesNamesWithMatchedSourceFiles = findAllWithPredictInArray(
@@ -98,7 +99,7 @@ export function calcMatchedPaths(
   }
   return treeWithRule;
 }
-interface userOpton extends Option {
+interface IuserOpton extends Option {
   genStatFile?: string;
   statFile?: string;
   rules?: string[][] | RegExp[][];
@@ -107,7 +108,7 @@ interface userOpton extends Option {
   fileMaxLine?: number;
   tsConfigPath?: string;
 }
-export async function startAnalyze(option: userOpton) {
+export async function startAnalyze(option: IuserOpton) {
   const saved = {} as Node;
   if (!path.isAbsolute(option.dictionaryPath)) {
     option.dictionaryPath = path.resolve(option.dictionaryPath);
@@ -128,7 +129,7 @@ export async function startAnalyze(option: userOpton) {
   }
 
   try {
-    await getTreeDataWithDictionary(option.dictionaryPath, saved);
+    getTreeDataWithDictionary(option.dictionaryPath, saved);
   } catch (e) {
     console.error(e);
   }
@@ -179,13 +180,7 @@ function startServer(
   lineNumberIgnorePath?: string,
   fileMaxLine?: number
 ) {
-  const {
-    port = 8887,
-    host = '127.0.0.1',
-    openBrowser = true,
-    bundleDir = null,
-    defaultSizes = 'parsed',
-  } = {};
+  const { port = 8887, host = '127.0.0.1', openBrowser = true } = {};
   const projectRoot = path.resolve(__dirname, '../..');
 
   const app = express();
@@ -204,7 +199,7 @@ function startServer(
     }
   });
 
-  app.use('/', (req, res) => {
+  app.use('/', (_req, res) => {
     res.set('Content-Type', 'text/html');
     res.render('denpendencyWithD3', {
       get denpencyData() {
@@ -214,7 +209,9 @@ function startServer(
         return JSON.stringify(fileArch);
       },
       get treeWithRule() {
-        if (!treeWithRule) return '';
+        if (!treeWithRule) {
+          return '';
+        }
         return JSON.stringify(treeWithRule);
       },
       get pathPrefix() {

@@ -1,10 +1,8 @@
-import * as path from 'path';
-import { resolve } from 'url';
-const l = require('debug')('resolve');
+import * as debug from 'debug';
+const l = debug('resolve');
 import * as ts from 'typescript';
-import * as fs from 'fs';
 
-interface tsOptions {
+interface ItsOptions {
   moduleName: string;
   containlingFile: string;
   optionsTsconfig?: ts.CompilerOptions;
@@ -13,7 +11,7 @@ interface tsOptions {
  * ts 自身实现了类似node的resolver,但是增加了d.ts等类型的搜索
  */
 export function tsReolveOptions(
-  options: tsOptions
+  options: ItsOptions
 ): ts.ResolvedModuleFull | undefined {
   options.optionsTsconfig = options.optionsTsconfig || {};
   const host = ts.createCompilerHost({
@@ -27,7 +25,7 @@ export function tsReolveOptions(
       ...options.optionsTsconfig,
       moduleResolution: ts.ModuleResolutionKind.NodeJs,
     } as ts.CompilerOptions,
-    host as ts.ModuleResolutionHost
+    host
   ).resolvedModule;
   l('ts resolved module: ', resolvedModule);
   return resolvedModule;

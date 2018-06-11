@@ -3,6 +3,7 @@ coverage
 node_modules
 update.tar.gz
 yarn.error
+src/*.js
 src/**/*.js
 src/**/*.js.map
 .DS_Store

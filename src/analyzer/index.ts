@@ -5,9 +5,11 @@ import * as fs from 'fs';
 import * as ts from 'typescript';
 import * as _ from 'lodash';
 import chalk from 'chalk';
-const l = require('debug')('analyzer');
+import * as debug from 'debug';
+const l = debug('analyzer');
 const DEFAULTIGNOREFILE = [/.*\.js$/, /.*\.d\.ts/];
 const MATHCHEDFILE = [/.*\.tsx/, /.*\.ts/];
+const tree: Tree = {};
 export interface Option {
   // 文件路径
   filePath?: string;
@@ -18,12 +20,12 @@ export interface Option {
   tsconfigPath?: string;
 }
 type tsResolveMod = ts.ResolvedModuleFull | undefined;
-export interface treeItem {
+export interface ItreeItem {
   notResolvedPaths?: string[];
   resolvedModules?: tsResolveMod[];
   denpendencesFileName: string[];
 }
-interface fileOption {
+interface IfileOption {
   filePath: string;
   tsconfigPath?: string;
 }
@@ -34,7 +36,7 @@ interface TsConfigFactoryOptions {
 }
 const DEFAULTIGNOREDICTIONARY = [/node_modules/];
 export interface Tree {
-  [path: string]: treeItem;
+  [path: string]: ItreeItem;
 }
 function tsConfigFileResolver(
   options: TsConfigFactoryOptions = {
@@ -69,6 +71,7 @@ function tsConfigFileResolver(
       });
     }
     if (!isIgnore) {
+      // tslint:disable-next-line:no-shadowed-variable
       const path = tsConfigFileResolver({
         ...options,
         rootTsConfigPath: filePath,
@@ -82,10 +85,12 @@ function tsConfigFileResolver(
       return '';
     }
   }
-  const lazyDictionaries = [];
+  const lazyDictionaries: string[] = [];
+  // tslint:disable-next-line:prefer-for-of
   for (let i = 0; i < dirInfos.length; i++) {
     const fileName = dirInfos[i];
     const filePath = path.resolve(rootTsConfigPath, fileName);
+    // tslint:disable-next-line:no-commented-code
     // l('------------filePath', filePath);
     const stat = fs.statSync(filePath);
     if (stat.isFile()) {
@@ -100,13 +105,15 @@ function tsConfigFileResolver(
     }
   }
 
+  // tslint:disable-next-line:prefer-for-of
   for (let i = 0; i < lazyDictionaries.length; i++) {
+    // tslint:disable-next-line:no-shadowed-variable
     const path = lazyDictionary(lazyDictionaries[i]);
     if (path) {
       return path;
-    }  
+    }
   }
-  return ''
+  return '';
 }
 function isValidatePath(str: string): boolean {
   return !!str;
@@ -124,14 +131,18 @@ interface ICirleSaved {
  * @param ans 保存循环引用的数组
  */
 function analyzeAPathExistCirleRefenrence(
+  // tslint:disable-next-line:no-shadowed-variable
   path: string,
+  // tslint:disable-next-line:no-shadowed-variable
   tree: Tree,
   saved: ICirleSaved = {},
   ans: string[] = [],
   level: number
 ) {
   const denpendences = tree[path] && tree[path].denpendencesFileName;
-  if (!denpendences || !denpendences.length) return false;
+  if (!denpendences || !denpendences.length) {
+    return false;
+  }
   saved[path] = saved[path] || { count: 0 };
   let isPushed = false;
 
@@ -145,7 +156,7 @@ function analyzeAPathExistCirleRefenrence(
     return true;
   }
   for (let i = 0; denpendences && i < denpendences.length; i++) {
-    let denpenPath = denpendences[i];
+    const denpenPath = denpendences[i];
     if (isValidatePath(denpenPath)) {
       ans.push(denpenPath);
       const anaRes = analyzeAPathExistCirleRefenrence(
@@ -169,22 +180,22 @@ function analyzeAPathExistCirleRefenrence(
 }
 
 /**
- * 
- * 
+ *
+ *
  * 1.分析特定文件的依赖关系 ，先搜索可能的tsconfig.json，根据这个tsconfig.json
  * 调用parse（有些包parse需要tsconfig.json）,解析出文件内对应的依赖,这个依赖都是相对路径
  * 这一步得到import 的那些值
- * 
+ *
  * 2.之后调用ts api 得到import的绝对路径
- * 
+ *
  * 3.再保存在树中
- * 
+ *
  * @param options fileOption
  *   filePath: 文件绝对路径;
-  tsconfigPath: tsconfig.json 可能路径 会自动搜索;
+ *   tsconfigPath: tsconfig.json 可能路径 会自动搜索;
  */
 let tsconfigPath: string;
-async function analyzeFile(options: fileOption): Promise<Tree> {
+async function analyzeFile(options: IfileOption): Promise<Tree> {
   const filePath = options.filePath;
   if (!path.isAbsolute(filePath)) {
     throw new Error(`${filePath}不是绝对路径`);
@@ -246,8 +257,8 @@ async function analyzeFile(options: fileOption): Promise<Tree> {
  * @param options
  * @return Tree 结构
  */
-const tree: Tree = {};
 export async function analyze(options: Option): Promise<Tree> {
+  // tslint:disable-next-line:no-commented-code
   // l('------------analyze options', options);
   if (options.filePath) {
     return await analyzeFile({
@@ -263,17 +274,21 @@ export async function analyze(options: Option): Promise<Tree> {
   }
 
   if (options.dictionaryPath) {
+    // tslint:disable-next-line:no-commented-code
     // l('------------analyze options.dictionaryPath', options.dictionaryPath);
     // 分析dictionaryPath中除了ignore之外的所有file
     const dirInfos = fs.readdirSync(options.dictionaryPath);
     if (!dirInfos) {
       throw new Error(`readdirSync ${options.dictionaryPath} is null`);
     }
-    //l('------------analyze dirInfos', dirInfos);
+    // tslint:disable-next-line:no-commented-code
+    // l('------------analyze dirInfos', dirInfos);
+    // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < dirInfos.length; i++) {
       const fileName = dirInfos[i];
       const filePath = path.resolve(options.dictionaryPath, fileName);
-      //l('------------analyze filePath', filePath);
+      // tslint:disable-next-line:no-commented-code
+      // l('------------analyze filePath', filePath);
       const stat = fs.statSync(filePath);
       const isIgnore = options.ignore.some((em) => {
         return em.test(filePath);
@@ -283,7 +298,7 @@ export async function analyze(options: Option): Promise<Tree> {
       });
       if (stat.isFile() && !isIgnore && isMatch) {
         await analyzeFile({
-          filePath: filePath,
+          filePath,
           tsconfigPath: options.tsconfigPath,
         });
       } else if (stat.isDirectory()) {
@@ -297,14 +312,18 @@ export async function analyze(options: Option): Promise<Tree> {
   return tree;
 }
 function findSecondOccur(array: string[]): string[] {
+  // tslint:disable-next-line:no-shadowed-variable
   function findDuplicates(array: string[]) {
+    // tslint:disable-next-line:no-shadowed-variable
     for (let i = 0; i < array.length; i++) {
+      // tslint:disable-next-line:no-shadowed-variable
       for (let j = i + 1; j < array.length; j++) {
         if (array[i] === array[j]) {
           return [i, j];
         }
       }
     }
+    return null;
   }
   const [i, j] = findDuplicates(array) || [0, array.length - 1];
   return array.splice(i, j - i + 1);
@@ -315,15 +334,18 @@ function isTwoArrayIdentical(array_1: string[], array_2: string[]) {
   const array2 = Array.from(array_2);
   return _.difference(array1, array2).length === 0;
 }
+// tslint:disable-next-line:no-shadowed-variable
 export function analyzeCirle(tree: Tree) {
-  let allFilePaths = Object.keys(tree);
+  const allFilePaths = Object.keys(tree);
   const cirles = [] as string[][];
+  // tslint:disable-next-line:no-shadowed-variable
   allFilePaths.forEach((path) => {
-    let ans: string[] = [];
+    const ans: string[] = [];
 
     if (analyzeAPathExistCirleRefenrence(path, tree, {}, ans, 0)) {
       let shouldPush = true;
-      let cir: string[] = findSecondOccur(ans);
+      const cir: string[] = findSecondOccur(ans);
+      // tslint:disable-next-line:prefer-for-of
       for (let index = 0; index < cirles.length; index++) {
         const cirItem = cirles[index];
         if (isTwoArrayIdentical(cirItem, cir)) {
@@ -332,12 +354,13 @@ export function analyzeCirle(tree: Tree) {
         }
       }
       if (cirles.length === 0) {
+        // tslint:disable-next-line:no-unused-expression
         cir && cir.length && cirles.push(cir);
       } else if (shouldPush && cir && cir.length) {
         cirles.push(cir);
       }
     }
-    ans = [];
+
   });
   return cirles;
 }
