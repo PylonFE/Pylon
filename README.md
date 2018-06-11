@@ -20,7 +20,7 @@ npm install Pylon
 or
 yarn add Pylon
 then
-dependence -p ./src -g stat.json --circle  -m 400
+dependence -p ./src
 ```
 
 
