@@ -13,6 +13,8 @@ ts项目分析工具(目前只支持ts项目，之后全面支持es6)
 2. 行数标记
 5. 项目代码统计等
 
+![gif](http://p1.meituan.net/dpgroup/7979e2d96f33ad2dd3bb01dacbec0ad84932521.gif)
+
 使用方法：
 
 ```js
@@ -65,5 +67,3 @@ dependence -p ./src
 -t, --ts-config-path <path>
 用于指定tsconfig.json的目录位置 ,可不传 将自动搜索路径最浅的tsconfig.json文件
 ```
-
-![gif](http://p1.meituan.net/dpgroup/7979e2d96f33ad2dd3bb01dacbec0ad84932521.gif)
