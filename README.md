@@ -1,6 +1,6 @@
 # Pylon
 
-ts项目分析工具
+ts项目分析工具(目前只支持ts项目，之后全面支持es6)
 
 ![icon](http://p0.meituan.net/dpgroup/243596a4048a4d9f7f00c8a6f11fb18b3131.png)
 
