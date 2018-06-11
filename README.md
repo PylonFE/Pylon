@@ -2,7 +2,7 @@
 
 ts项目分析工具
 
-![icon](//p0.meituan.net/dpgroup/243596a4048a4d9f7f00c8a6f11fb18b3131.png)
+![icon](https://p0.meituan.net/dpgroup/243596a4048a4d9f7f00c8a6f11fb18b3131.png)
 
 
 #### 文件夹查看形式
@@ -55,4 +55,4 @@ ts项目分析工具
 用于指定tsconfig.json的目录位置 ,可不传 将自动搜索路径最浅的tsconfig.json文件
 ```
 
-![](//p1.meituan.net/dpgroup/7979e2d96f33ad2dd3bb01dacbec0ad84932521.gif)
+![gif](https://p1.meituan.net/dpgroup/7979e2d96f33ad2dd3bb01dacbec0ad84932521.gif)
