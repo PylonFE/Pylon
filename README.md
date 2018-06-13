@@ -7,9 +7,9 @@ ts项目分析工具(目前只支持ts项目，之后全面支持es6)
 ![icon](http://p0.meituan.net/dpgroup/243596a4048a4d9f7f00c8a6f11fb18b3131.png)
 
 
-### 以树装文件夹形式查看依赖
+### 以树状文件夹形式查看依赖
 
-1. 依赖查看可视化
+1. 依赖查看可视化(支持动态import, require分析)
 3. 循环引用检测
 4. 指定引用标记
 2. 行数标记，大小统计
@@ -59,9 +59,11 @@ dependence -p ./src
  -r, --rules <rule>
  用于指定的规则数组，为一个二维数组，保存需要标红的依赖路径
  ```
+
+```js
   example: --rules [[\\'client\\',\\'server\\'],[\\'server\\',\\'client\\']]
   指定client和server不能互引
-
+```
 
 ```js
 -c, --circle 指定是否检测循环引用
