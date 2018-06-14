@@ -1,4 +1,5 @@
 import { readFileSync } from 'fs';
+import * as fs from 'fs';
 import * as _ from 'lodash';
 import Project, { ScriptTarget, SyntaxKind, ts } from 'ts-simple-ast';
 import * as debug from 'debug';
@@ -8,11 +9,24 @@ interface Ioption {
   filePath: string;
 }
 
-export function getTsdenpenDences(options: Ioption, res: string[] = []) {
+export function getTsdenpenDences(
+  options: Ioption,
+  res: string[] = [],
+  isJs?: boolean
+) {
   const project = new Project({
     tsConfigFilePath: options.tsConfigFilePath,
   });
-  const sourceFile = project.addExistingSourceFile(options.filePath); // or addExistingSourceFileIfExists
+  let sourceFile;
+  if (isJs) {
+    // sholdnot call save
+    sourceFile = project.createSourceFile(
+      options.filePath,
+      fs.readFileSync(options.filePath).toString()
+    );
+  } else {
+    sourceFile = project.addExistingSourceFile(options.filePath); // or addExistingSourceFileIfExists
+  }
   // get them all
   const imports = sourceFile.getImportDeclarations();
   // tslint:disable-next-line:prefer-for-of
@@ -42,8 +56,12 @@ export function walk(sourceFile: ts.SourceFile) {
   }
   return denpendences;
 }
-export function parse(fileName: string, tsConfigFilePath: string) {
-  // Parse a file
+export function parse(
+  fileName: string,
+  tsConfigFilePath: string,
+  isJs: boolean
+) {
+  // Parse a file ts js都可以
   const sourceFile = ts.createSourceFile(
     fileName,
     readFileSync(fileName).toString(),
@@ -51,10 +69,14 @@ export function parse(fileName: string, tsConfigFilePath: string) {
     /*setParentNodes */ true
   );
   // walk it
-  const denpendencesWithoutWalker = getTsdenpenDences({
-    filePath: fileName,
-    tsConfigFilePath,
-  });
+  const denpendencesWithoutWalker = getTsdenpenDences(
+    {
+      filePath: fileName,
+      tsConfigFilePath,
+    },
+    [],
+    isJs
+  );
   let denpendences = walk(sourceFile);
   denpendences = denpendencesWithoutWalker.concat(denpendences);
   return _.uniq(denpendences);

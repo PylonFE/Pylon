@@ -18,6 +18,7 @@ export interface Option {
   ignore?: RegExp[];
   match?: RegExp[];
   tsconfigPath?: string;
+  isJs: boolean;
 }
 type tsResolveMod = ts.ResolvedModuleFull | undefined;
 export interface ItreeItem {
@@ -28,6 +29,7 @@ export interface ItreeItem {
 interface IfileOption {
   filePath: string;
   tsconfigPath?: string;
+  isJs: boolean;
 }
 
 interface TsConfigFactoryOptions {
@@ -137,7 +139,8 @@ function analyzeAPathExistCirleRefenrence(
   tree: Tree,
   saved: ICirleSaved = {},
   ans: string[] = [],
-  level: number
+  level: number,
+  ansOfTwoArray: string[][] = [[]]
 ) {
   const denpendences = tree[path] && tree[path].denpendencesFileName;
   if (!denpendences || !denpendences.length) {
@@ -153,21 +156,24 @@ function analyzeAPathExistCirleRefenrence(
 
   if (++saved[path].count >= 2) {
     // path 存在循環引用
+    saved[path].count--;
     return true;
   }
   for (let i = 0; denpendences && i < denpendences.length; i++) {
     const denpenPath = denpendences[i];
     if (isValidatePath(denpenPath)) {
+      // 要考虑中途
       ans.push(denpenPath);
       const anaRes = analyzeAPathExistCirleRefenrence(
         denpenPath,
         tree,
         saved,
         ans,
-        level + 1
+        level + 1,
+        ansOfTwoArray
       );
       if (anaRes) {
-        return true;
+        ansOfTwoArray.push(_.cloneDeep(ans));
       }
       ans.pop();
     }
@@ -176,6 +182,7 @@ function analyzeAPathExistCirleRefenrence(
   if (isPushed) {
     ans.pop();
   }
+  // 每个返回都要减减
   return false;
 }
 
@@ -212,7 +219,7 @@ async function analyzeFile(options: IfileOption): Promise<Tree> {
     tsconfigPath = tsConfigFileResolver();
   }
   // 不限制ts
-  const denpendences = parse(filePath, tsconfigPath);
+  const denpendences = parse(filePath, tsconfigPath, options.isJs);
   let tsconfig: { compilerOptions: ts.CompilerOptions } = {
     compilerOptions: {},
   };
@@ -227,6 +234,7 @@ async function analyzeFile(options: IfileOption): Promise<Tree> {
     tsconfig.compilerOptions &&
     tsconfig.compilerOptions.baseUrl
   ) {
+    // 转换baseUrl
     const baseUrl = path.resolve(tsdirName, tsconfig.compilerOptions.baseUrl);
     tsconfig.compilerOptions.baseUrl = baseUrl;
   }
@@ -264,6 +272,7 @@ export async function analyze(options: Option): Promise<Tree> {
     return await analyzeFile({
       filePath: options.filePath,
       tsconfigPath: options.tsconfigPath,
+      isJs: options.isJs,
     });
   }
   if (!options.ignore) {
@@ -300,11 +309,13 @@ export async function analyze(options: Option): Promise<Tree> {
         await analyzeFile({
           filePath,
           tsconfigPath: options.tsconfigPath,
+          isJs: options.isJs,
         });
       } else if (stat.isDirectory()) {
         await analyze({
           dictionaryPath: filePath,
           tsconfigPath: options.tsconfigPath,
+          isJs: options.isJs,
         });
       }
     }
@@ -312,6 +323,9 @@ export async function analyze(options: Option): Promise<Tree> {
   return tree;
 }
 function findSecondOccur(array: string[]): string[] {
+  if (array.length === 0) {
+    return [];
+  }
   // tslint:disable-next-line:no-shadowed-variable
   function findDuplicates(array: string[]) {
     // tslint:disable-next-line:no-shadowed-variable
@@ -340,9 +354,10 @@ export function analyzeCirle(tree: Tree) {
   const cirles = [] as string[][];
   // tslint:disable-next-line:no-shadowed-variable
   allFilePaths.forEach((path) => {
-    const ans: string[] = [];
-
-    if (analyzeAPathExistCirleRefenrence(path, tree, {}, ans, 0)) {
+    const ansTwoArray: string[][] = [[]];
+    // ansTwoArray 保存 path的所有循环引用，以二维数组保存
+    analyzeAPathExistCirleRefenrence(path, tree, {}, [], 0, ansTwoArray);
+    for (const ans of ansTwoArray) {
       let shouldPush = true;
       const cir: string[] = findSecondOccur(ans);
       // tslint:disable-next-line:prefer-for-of
@@ -360,7 +375,6 @@ export function analyzeCirle(tree: Tree) {
         cirles.push(cir);
       }
     }
-
   });
   return cirles;
 }

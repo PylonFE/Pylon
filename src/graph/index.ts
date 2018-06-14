@@ -107,6 +107,7 @@ interface IuserOpton extends Option {
   lineNumberIgnorePath?: string;
   fileMaxLine?: number;
   tsConfigPath?: string;
+  isJs: boolean;
 }
 export async function startAnalyze(option: IuserOpton) {
   const saved = {} as Node;
@@ -143,19 +144,34 @@ export async function startAnalyze(option: IuserOpton) {
       treeWithRule = calcMatchedPaths(tree, option.rules);
     } catch (e) {
       console.error(e);
+      treeWithRule = {};
     }
-    console.log(
-      chalk.bold(`分析关系 ${option.rules} `),
-      chalk.blueBright(JSON.stringify(treeWithRule))
-    );
+    const keysWithRules = Object.keys(treeWithRule);
+    console.log(chalk.bold(`分析关系 ${option.rules} \r\n`));
+    for (const key of keysWithRules) {
+      console.log(
+        chalk.blueBright(
+          `${JSON.stringify(key)}
+------- 依赖 --------->
+${JSON.stringify(treeWithRule[key].denpendencesFileName) + '\r\n'}
+`
+        )
+      );
+    }
   }
   let circle;
   if (option.circle) {
     circle = analyzeCirle(tree);
-    console.log(
-      chalk.bold('循环引用路径二维数组存储： '),
-      chalk.redBright(JSON.stringify(circle))
-    );
+    console.log(chalk.bold('循环引用路径二维数组存储： \n\r'));
+    for (const circleItem of circle) {
+      console.log(
+        chalk.redBright(
+          `循环引用 --------->
+${JSON.stringify(circleItem) + '\r\n'}
+`
+        )
+      );
+    }
   }
 
   startServer(
