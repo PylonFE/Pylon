@@ -31,9 +31,9 @@ ts项目分析工具(目前只支持ts项目，之后全面支持es6)
 使用方法：
 
 ```js
-npm install Pylon
+npm install pylonn
 or
-yarn add Pylon
+yarn add pylonn
 then
 dependence -p ./src
 ```
