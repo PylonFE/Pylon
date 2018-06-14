@@ -22,8 +22,7 @@ ts项目分析工具(目前只支持ts项目，之后全面支持es6)
 1. 函数复杂度检测
 2. 依赖文件大小告警
 3. UI 交互优化
-4. 引入js依赖分析
-5. …………
+4. …………
 
 ![gif](http://p1.meituan.net/dpgroup/7979e2d96f33ad2dd3bb01dacbec0ad84932521.gif)
 
