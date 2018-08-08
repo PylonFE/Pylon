@@ -1,4 +1,7 @@
 # Pylon
+[![build](https://img.shields.io/npm/v/pylonn.svg?style=flat-square)](https://www.npmjs.com/package/pylonn) 
+[![build](https://img.shields.io/npm/l/express.svg)](https://www.npmjs.com/package/pylonn)
+[![download](https://img.shields.io/npm/dm/pylonn.svg?style=flat-square)](https://www.npmjs.com/package/pylonn)
 
 名称取自星际争霸神族水晶塔，意在为项目提供支持
 
