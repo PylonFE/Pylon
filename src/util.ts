@@ -53,8 +53,12 @@ export function getStrLineNumber(str: string) {
   return match.length;
 }
 
-// 把文件结构转化为树装结构
-export function getTreeDataWithDictionary(rootPath: string, parentNode: Node) {
+// 把文件结构转化为树状结构
+export function getTreeDataWithDictionary(
+  rootPath: string,
+  parentNode: Node,
+  ignoreDictionary: RegExp[] = [/node_modules/]
+) {
   const stat = fs.statSync(rootPath);
   if (!stat.isDirectory() && !isTsRelateve(rootPath)) {
     // 是文件 不是ts相关文件
@@ -75,12 +79,19 @@ export function getTreeDataWithDictionary(rootPath: string, parentNode: Node) {
     }
     node.size = (stat.size / 1024).toFixed(2) + 'kb';
     return;
+  } else if (
+    ignoreDictionary.some((dictionaryReg) => {
+      return dictionaryReg.test(rootPath);
+    })
+  ) {
+    // 如果是要忽略掉的文件夹
+    return;
   }
   const dirInfos = fs.readdirSync(rootPath);
   for (let index = 0; dirInfos && index < dirInfos.length; index++) {
     const subPath = dirInfos[index];
     node.children = node.children || [];
     const filePath = path.resolve(rootPath, subPath);
-    getTreeDataWithDictionary(filePath, node);
+    getTreeDataWithDictionary(filePath, node, ignoreDictionary);
   }
 }
