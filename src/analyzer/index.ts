@@ -9,12 +9,14 @@ import * as debug from 'debug';
 const l = debug('analyzer');
 const DEFAULTIGNOREFILE = [/.*\.js$/, /.*\.d\.ts/];
 const MATHCHEDFILE = [/.*\.tsx/, /.*\.ts/];
+const IGNOREDICTIONARYPATH = [/node_modules/];
 const tree: Tree = {};
 export interface Option {
   // 文件路径
   filePath?: string;
   // 文件夹路径
   dictionaryPath: string;
+  ignoreDictionaryPath?: RegExp[];
   ignore?: RegExp[];
   match?: RegExp[];
   tsconfigPath?: string;
@@ -40,6 +42,9 @@ const DEFAULTIGNOREDICTIONARY = [/node_modules/];
 export interface Tree {
   [path: string]: ItreeItem;
 }
+/*
+找出tsconfig文件
+*/
 function tsConfigFileResolver(
   options: TsConfigFactoryOptions = {
     rootTsConfigPath: '.',
@@ -265,6 +270,7 @@ async function analyzeFile(options: IfileOption): Promise<Tree> {
  * @param options
  * @return Tree 结构
  */
+// tslint:disable-next-line:cognitive-complexity
 export async function analyze(options: Option): Promise<Tree> {
   // tslint:disable-next-line:no-commented-code
   // l('------------analyze options', options);
@@ -281,6 +287,9 @@ export async function analyze(options: Option): Promise<Tree> {
   if (!options.match) {
     options.match = MATHCHEDFILE;
   }
+  if (!options.ignoreDictionaryPath) {
+    options.ignoreDictionaryPath = IGNOREDICTIONARYPATH;
+  }
 
   if (options.dictionaryPath) {
     // tslint:disable-next-line:no-commented-code
@@ -295,9 +304,7 @@ export async function analyze(options: Option): Promise<Tree> {
     // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < dirInfos.length; i++) {
       const fileName = dirInfos[i];
-      const filePath = path.resolve(options.dictionaryPath, fileName);
-      // tslint:disable-next-line:no-commented-code
-      // l('------------analyze filePath', filePath);
+      const filePath: string = path.resolve(options.dictionaryPath, fileName);
       const stat = fs.statSync(filePath);
       const isIgnore = options.ignore.some((em) => {
         return em.test(filePath);
@@ -312,11 +319,20 @@ export async function analyze(options: Option): Promise<Tree> {
           isJs: options.isJs,
         });
       } else if (stat.isDirectory()) {
-        await analyze({
-          dictionaryPath: filePath,
-          tsconfigPath: options.tsconfigPath,
-          isJs: options.isJs,
-        });
+        // tslint:disable-next-line:curly
+        if (
+          // 如果不是忽略的文件夹
+          !options.ignoreDictionaryPath.some((regx) => {
+            return !!filePath.match(regx);
+          })
+        ) {
+          // filePath是文件夹路径
+          await analyze({
+            dictionaryPath: filePath,
+            tsconfigPath: options.tsconfigPath,
+            isJs: options.isJs,
+          });
+        }
       }
     }
   }
