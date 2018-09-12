@@ -1,8 +1,11 @@
 # Pylon
+[![build](https://img.shields.io/npm/v/pylonn.svg?style=flat-square)](https://www.npmjs.com/package/pylonn) 
+[![build](https://img.shields.io/npm/l/express.svg)](https://www.npmjs.com/package/pylonn)
+[![download](https://img.shields.io/npm/dm/pylonn.svg?style=flat-square)](https://www.npmjs.com/package/pylonn)
 
 名称取自星际争霸神族水晶塔，意在为项目提供支持
 
-ts项目分析工具(目前只支持ts项目，之后全面支持es6)
+ts项目分析工具 
 
 ![icon](http://p0.meituan.net/dpgroup/243596a4048a4d9f7f00c8a6f11fb18b3131.png)
 
@@ -22,9 +25,9 @@ ts项目分析工具(目前只支持ts项目，之后全面支持es6)
 1. 函数复杂度检测
 2. 依赖文件大小告警
 3. UI 交互优化
-4. …………
+4. ......
 
-![gif](http://p1.meituan.net/dpgroup/7979e2d96f33ad2dd3bb01dacbec0ad84932521.gif)
+![gif](https://p1.meituan.net/dpgroup/7979e2d96f33ad2dd3bb01dacbec0ad84932521.gif)
 
 （动态图片可点击查看）
 

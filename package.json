@@ -54,5 +54,5 @@
     "lint": "tslint --project tsconfig.json --config tslint.json --fix"
   },
   "author": "",
-  "license": "ISC"
+  "license": "MIT"
 }
