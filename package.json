@@ -1,6 +1,6 @@
 {
-  "name": "pylonn",
-  "version": "1.0.7",
+  "name": "@mtfe/dependency-tool",
+  "version": "1.0.13",
   "description": "",
   "main": "index.js",
   "dependencies": {
@@ -54,5 +54,5 @@
     "lint": "tslint --project tsconfig.json --config tslint.json --fix"
   },
   "author": "",
-  "license": "MIT"
+  "license": "ISC"
 }

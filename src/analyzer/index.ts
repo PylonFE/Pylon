@@ -323,15 +323,18 @@ export async function analyze(options: Option): Promise<Tree> {
         if (
           // 如果不是忽略的文件夹
           !options.ignoreDictionaryPath.some((regx) => {
-            return !!filePath.match(regx);
+            return regx.test(filePath);
           })
         ) {
+          l(`分析文件夹 ${filePath}`);
           // filePath是文件夹路径
           await analyze({
             dictionaryPath: filePath,
             tsconfigPath: options.tsconfigPath,
             isJs: options.isJs,
           });
+        } else {
+          console.log(`遇到${options.ignoreDictionaryPath} 忽略`);
         }
       }
     }
