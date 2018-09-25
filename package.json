@@ -1,6 +1,6 @@
 {
-  "name": "@mtfe/dependency-tool",
-  "version": "1.0.14",
+  "name": "pylonn",
+  "version": "1.0.8",
   "description": "",
   "main": "index.js",
   "dependencies": {
