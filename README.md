@@ -7,7 +7,6 @@
 
 ts项目分析工具 
 
-![icon](http://p0.meituan.net/dpgroup/243596a4048a4d9f7f00c8a6f11fb18b3131.png)
 
 
 ### 以树状文件夹形式查看依赖
@@ -27,7 +26,6 @@ ts项目分析工具
 3. UI 交互优化
 4. ......
 
-![gif](https://p1.meituan.net/dpgroup/7979e2d96f33ad2dd3bb01dacbec0ad84932521.gif)
 
 （动态图片可点击查看）
 
