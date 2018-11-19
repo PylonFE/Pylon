@@ -43,6 +43,7 @@
     "@types/node": "^9.6.21",
     "@types/opener": "^1.4.0",
     "debug": "^3.1.0",
+    "jest": "^23.6.0",
     "tslint": "^5.10.0",
     "tslint-react": "^3.6.0",
     "tslint-sonarts": "^1.7.0"
@@ -50,6 +51,7 @@
   "scripts": {
     "test": "jest",
     "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
     "run": "./src/cli/index.js",
     "lint": "tslint --project tsconfig.json --config tslint.json --fix"
   },

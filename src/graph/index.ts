@@ -128,7 +128,7 @@ export async function startAnalyze(option: IuserOpton) {
       console.error(e);
     }
   }
-
+  fs.writeFileSync(path.join(process.cwd(), 'Pylon.json'), JSON.stringify(tree));
   try {
     getTreeDataWithDictionary(option.dictionaryPath, saved);
   } catch (e) {

@@ -7,6 +7,7 @@ import * as _ from 'lodash';
 import chalk from 'chalk';
 import * as debug from 'debug';
 const l = debug('analyzer');
+
 const DEFAULTIGNOREFILE = [/.*\.js$/, /.*\.d\.ts/];
 const MATHCHEDFILE = [/.*\.tsx/, /.*\.ts/];
 const IGNOREDICTIONARYPATH = [/node_modules/];
