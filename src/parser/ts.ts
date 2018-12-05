@@ -1,5 +1,4 @@
 import { readFileSync } from 'fs';
-import * as fs from 'fs';
 import * as _ from 'lodash';
 import Project, { ScriptTarget, SyntaxKind, ts } from 'ts-simple-ast';
 import * as debug from 'debug';
@@ -14,15 +13,18 @@ export function getTsdenpenDences(
   res: string[] = [],
   isJs?: boolean
 ) {
-  const project = new Project({
-    tsConfigFilePath: options.tsConfigFilePath,
-  });
+  const project = new Project(
+    options.tsConfigFilePath
+      ? {
+          tsConfigFilePath: options.tsConfigFilePath,
+        }
+      : {}
+  );
   let sourceFile;
   if (isJs) {
     // sholdnot call save
-    sourceFile = project.createSourceFile(
-      options.filePath,
-      fs.readFileSync(options.filePath).toString()
+    sourceFile = project.addExistingSourceFile(
+      options.filePath
     );
   } else {
     sourceFile = project.addExistingSourceFile(options.filePath); // or addExistingSourceFileIfExists
@@ -62,6 +64,7 @@ export function parse(
   isJs: boolean
 ) {
   // Parse a file ts js都可以
+  l('--------analyzeFile', fileName, tsConfigFilePath, isJs);
   const sourceFile = ts.createSourceFile(
     fileName,
     readFileSync(fileName).toString(),

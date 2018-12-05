@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
 export function isTsRelateve(filename: string) {
-  return filename.match(/\.ts/gi);
+  return filename.match(/\.(j|t)sx?$/gi);
 }
 interface Inode {
   name: string;
@@ -57,7 +57,7 @@ export function getStrLineNumber(str: string) {
 export function getTreeDataWithDictionary(
   rootPath: string,
   parentNode: Node,
-  ignoreDictionary: RegExp[] = [/node_modules/]
+  ignoreDictionary: RegExp[] = [/node_modules/, /\.git/, /\.vscode/],
 ) {
   const stat = fs.statSync(rootPath);
   if (!stat.isDirectory() && !isTsRelateve(rootPath)) {
@@ -66,6 +66,7 @@ export function getTreeDataWithDictionary(
   }
   const node = {} as Node;
   node.name = rootPath;
+  console.log('rootPath', rootPath);
 
   parentNode.children = parentNode.children || [];
   parentNode.children.push(node);

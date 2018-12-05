@@ -108,6 +108,9 @@ interface IuserOpton extends Option {
   fileMaxLine?: number;
   tsConfigPath?: string;
   isJs: boolean;
+  alias?: {
+    [path: string]: string;
+  };
 }
 export async function startAnalyze(option: IuserOpton) {
   const saved = {} as Node;
@@ -115,7 +118,6 @@ export async function startAnalyze(option: IuserOpton) {
     option.dictionaryPath = path.resolve(option.dictionaryPath);
   }
 
-  console.log('option.dictionaryPath', option.dictionaryPath);
   let tree;
   if (option.statFile) {
     tree = JSON.parse(fs.readFileSync(option.statFile).toString());
@@ -124,13 +126,23 @@ export async function startAnalyze(option: IuserOpton) {
       tree = await analyze(
         Object.assign(option, { tsconfigPath: option.tsConfigPath })
       );
+      fs.writeFileSync(
+        path.join(process.cwd(), 'pylon.json'),
+        JSON.stringify(tree)
+      );
     } catch (e) {
       console.error(e);
     }
   }
-  fs.writeFileSync(path.join(process.cwd(), 'Pylon.json'), JSON.stringify(tree));
+
   try {
+    console.log(chalk.bold('---------开始生成项目结构'));
     getTreeDataWithDictionary(option.dictionaryPath, saved);
+    console.log(chalk.bold('---------生成项目结构结束'));
+    fs.writeFileSync(
+      path.join(process.cwd(), 'pylon-dir.json'),
+      JSON.stringify(saved)
+    );
   } catch (e) {
     console.error(e);
   }
