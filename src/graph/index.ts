@@ -9,7 +9,7 @@ import * as fs from 'fs';
 
 import * as _ from 'lodash';
 import { getTreeDataWithDictionary } from '../util';
-
+import { genBeDependentTree } from './genDepenceTree';
 export interface Node {
   name: string;
   children: Node[];
@@ -99,7 +99,7 @@ export function calcMatchedPaths(
   }
   return treeWithRule;
 }
-interface IuserOpton extends Option {
+export interface IuserOpton extends Option {
   genStatFile?: string;
   statFile?: string;
   rules?: string[][] | RegExp[][];
@@ -111,13 +111,13 @@ interface IuserOpton extends Option {
   alias?: {
     [path: string]: string;
   };
+  rootFile?: string;
 }
 export async function startAnalyze(option: IuserOpton) {
   const saved = {} as Node;
   if (!path.isAbsolute(option.dictionaryPath)) {
     option.dictionaryPath = path.resolve(option.dictionaryPath);
   }
-
   let tree;
   if (option.statFile) {
     tree = JSON.parse(fs.readFileSync(option.statFile).toString());
@@ -135,14 +135,16 @@ export async function startAnalyze(option: IuserOpton) {
     }
   }
 
+  if (option.rootFile) {
+    fs.writeFileSync(
+      path.join(process.cwd(), 'dependences.json'),
+      JSON.stringify(genBeDependentTree(option.rootFile, tree))
+    );
+  }
+
   try {
     console.log(chalk.bold('---------开始生成项目结构'));
     getTreeDataWithDictionary(option.dictionaryPath, saved);
-    console.log(chalk.bold('---------生成项目结构结束'));
-    fs.writeFileSync(
-      path.join(process.cwd(), 'pylon-dir.json'),
-      JSON.stringify(saved)
-    );
   } catch (e) {
     console.error(e);
   }

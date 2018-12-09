@@ -29,6 +29,7 @@ program
   .option('-t, --ts-config-path <path>', 'tsconfig路径')
   .option('-j, --is-js', '是否是js项目', false)
   .option('-a, --config <file>', '配置文件')
+  .option('-d, --dependences <file>', '生成单个文件的依赖树')
   .parse(process.argv);
 
 let dictionaryPath;
@@ -42,7 +43,7 @@ if (program.path) {
 if (program.config) {
   const configFile = path.resolve(cwd, program.config);
   if (!fs.existsSync(configFile))
-    throw new Error('请在指定正确的pylon.config.js路径');
+    throw new Error('请在项目根目录下配置pylon.config.js');
   option = require(configFile);
 } else {
   const rules = program.rules && program.rules.replace(/'/g, '"');
@@ -56,6 +57,7 @@ if (program.config) {
     fileMaxLine: program.fileMaxLine,
     tsConfigPath: program.tsConfigPath,
     isJs: program.isJs,
+    rootFile: program.dependences,
   };
 }
 

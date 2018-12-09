@@ -2,7 +2,7 @@
   "name": "pylonn",
   "version": "1.0.8",
   "description": "",
-  "main": "index.js",
+  "main": "./src/index.js",
   "dependencies": {
     "@types/d3": "^5.0.0",
     "@types/ejs": "^2.5.1",

@@ -214,7 +214,7 @@ function analyzeAPathExistCirleRefenrence(
  *   tsconfigPath: tsconfig.json 可能路径 会自动搜索;
  */
 let tsconfigPath: string;
-async function analyzeFile(options: IfileOption): Promise<Tree> {
+export async function analyzeFile(options: IfileOption): Promise<Tree> {
   l('-------analyzeFile options', options);
   const filePath = options.filePath;
   if (!path.isAbsolute(filePath)) {
@@ -223,20 +223,9 @@ async function analyzeFile(options: IfileOption): Promise<Tree> {
   console.log(chalk.green(`开始分析 ${filePath}`));
   l(`开始分析 ${filePath}`);
 
-  if (options.tsconfigPath && !tsconfigPath) {
-    tsconfigPath = tsConfigFileResolver({
-      rootTsConfigPath: options.tsconfigPath,
-      ignorePaths: [/node_modules/],
-    });
-  } else if (!tsconfigPath) {
-    tsconfigPath = tsConfigFileResolver();
-  }
   // 不限制ts
   const denpendences = parse(filePath, tsconfigPath, options.isJs);
   l('-----denpendences', denpendences);
-  let tsconfig: { compilerOptions: ts.CompilerOptions } = {
-    compilerOptions: {},
-  };
   if (options.isJs) {
     const resolvedModules = denpendences.map((notResolvedDenpath: string) => {
       return jsResolveOptions({
@@ -256,6 +245,17 @@ async function analyzeFile(options: IfileOption): Promise<Tree> {
       }),
     };
   } else {
+    let tsconfig: { compilerOptions: ts.CompilerOptions } = {
+      compilerOptions: {},
+    };
+    if (options.tsconfigPath && !tsconfigPath) {
+      tsconfigPath = tsConfigFileResolver({
+        rootTsConfigPath: options.tsconfigPath,
+        ignorePaths: [/node_modules/],
+      });
+    } else if (!tsconfigPath) {
+      tsconfigPath = tsConfigFileResolver();
+    }
     try {
       tsconfig = JSON.parse(fs.readFileSync(tsconfigPath).toString());
     } catch (e) {
