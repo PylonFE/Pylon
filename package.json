@@ -1,6 +1,6 @@
 {
-  "name": "pylonn",
-  "version": "1.0.8",
+  "name": "@mtfe/pylon",
+  "version": "1.0.10",
   "description": "",
   "main": "index.js",
   "dependencies": {
@@ -26,11 +26,12 @@
     "resolve": "^1.6.0",
     "shelljs": "^0.8.2",
     "ts-jest": "^22.0.0",
-    "ts-simple-ast": "^10.2.0",
+    "ts-morph": "*",
+    "ts-simple-ast": "*",
     "tslib": "^1.9.1",
-    "typescript": "^2.8.1",
-    "typescript-parser": "^2.4.0",
-    "walkdir": "0.0.12"
+    "typescript": "^3.8.3",
+    "typescript-parser": "^2.6.0",
+    "walkdir": "^0.4.1"
   },
   "bin": {
     "dependence": "./src/cli/index.js"

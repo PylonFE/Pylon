@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import * as fs from 'fs';
 import * as _ from 'lodash';
-import Project, { ScriptTarget, SyntaxKind, ts } from 'ts-simple-ast';
+import { Project, SourceFile, ScriptTarget, SyntaxKind, ts } from 'ts-morph';
 import * as debug from 'debug';
 const l = debug('parse');
 interface Ioption {
@@ -17,7 +17,7 @@ export function getTsdenpenDences(
   const project = new Project({
     tsConfigFilePath: options.tsConfigFilePath,
   });
-  let sourceFile;
+  let sourceFile: SourceFile|undefined;
   if (isJs) {
     // sholdnot call save
     sourceFile = project.createSourceFile(
@@ -25,12 +25,12 @@ export function getTsdenpenDences(
       fs.readFileSync(options.filePath).toString()
     );
   } else {
-    sourceFile = project.addExistingSourceFile(options.filePath); // or addExistingSourceFileIfExists
+    sourceFile = project.addSourceFileAtPathIfExists(options.filePath); // or addExistingSourceFileIfExists
   }
   // get them all
-  const imports = sourceFile.getImportDeclarations();
+  const imports = sourceFile && sourceFile.getImportDeclarations();
   // tslint:disable-next-line:prefer-for-of
-  for (let i = 0; i < imports.length; i++) {
+  for (let i = 0; imports && i < imports.length; i++) {
     const importDeclaration = imports[i];
     const denpen = importDeclaration.getModuleSpecifierValue();
     res.push(denpen);
@@ -50,7 +50,7 @@ export function walk(sourceFile: ts.SourceFile) {
       // 非贪婪
       const matched = node.getText().match(/(import|require)\((.+?)\)/);
       // tslint:disable-next-line:no-unused-expression
-      matched && denpendences.push(matched[2].replace(/'|"/g, ''));
+      matched && denpendences.push(matched[2].replace(/'|"|\$|`/g, ''));
     }
     ts.forEachChild(node, _walk);
   }

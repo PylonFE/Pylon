@@ -208,7 +208,7 @@ function startServer(
 
   app.use('/getFileContent', (req, res) => {
     if (req.query.filePath) {
-      const fileContent = fs.readFileSync(req.query.filePath).toString();
+      const fileContent = fs.readFileSync(req.query.filePath as string).toString();
       res.send({ content: fileContent });
     } else {
       res.send({ content: '' });
